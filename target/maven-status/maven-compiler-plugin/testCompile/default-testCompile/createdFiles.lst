@@ -1,0 +1,4 @@
+com\flightreservation\ReservationAdminFacadeTest.class
+com\flightreservation\AdditionalCoverageTest.class
+com\flightreservation\FlightReservationFacadeTest.class
+com\flightreservation\FlightReservationPersistenceTest.class

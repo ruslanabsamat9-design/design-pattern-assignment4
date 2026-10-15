@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SeatReservationService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">design-pattern-assignment4</a> &gt; <a href="index.source.html" class="el_package">com.flightreservation.reservation</a> &gt; <span class="el_source">SeatReservationService.java</span></div><h1>SeatReservationService.java</h1><pre class="source lang-java linenums">package com.flightreservation.reservation;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.UUID;
+
+public class SeatReservationService {
+    private final Path dataFile;
+    private final ObjectMapper objectMapper;
+
+<span class="fc" id="L16">    public SeatReservationService(Path dataDirectory) {</span>
+<span class="fc" id="L17">        this.objectMapper = new ObjectMapper();</span>
+<span class="fc" id="L18">        this.dataFile = dataDirectory.resolve(&quot;reservations.json&quot;);</span>
+        try {
+<span class="fc" id="L20">            Files.createDirectories(dataDirectory);</span>
+<span class="fc bfc" id="L21" title="All 2 branches covered.">            if (Files.notExists(dataFile)) {</span>
+<span class="fc" id="L22">                Files.writeString(dataFile, &quot;[]&quot;);</span>
+            }
+<span class="nc" id="L24">        } catch (IOException e) {</span>
+<span class="nc" id="L25">            throw new IllegalStateException(&quot;Could not initialize reservation storage&quot;, e);</span>
+<span class="fc" id="L26">        }</span>
+<span class="fc" id="L27">    }</span>
+
+    public Reservation reserveSeat(String passengerName, String flightNumber, String seatNumber) {
+<span class="fc" id="L30">        List&lt;Reservation&gt; reservations = loadReservations();</span>
+
+<span class="fc" id="L32">        boolean alreadyTaken = reservations.stream()</span>
+<span class="pc bpc" id="L33" title="1 of 2 branches missed.">                .anyMatch(r -&gt; r.getSeatNumber().equalsIgnoreCase(seatNumber)</span>
+<span class="pc bpc" id="L34" title="1 of 2 branches missed.">                        &amp;&amp; r.getFlightNumber().equalsIgnoreCase(flightNumber)</span>
+<span class="pc bpc" id="L35" title="1 of 2 branches missed.">                        &amp;&amp; r.getStatus() == ReservationStatus.CONFIRMED);</span>
+
+<span class="fc bfc" id="L37" title="All 2 branches covered.">        if (alreadyTaken) {</span>
+<span class="fc" id="L38">            throw new IllegalArgumentException(&quot;Seat is already reserved: &quot; + seatNumber);</span>
+        }
+
+<span class="fc" id="L41">        Reservation reservation = new Reservation(</span>
+<span class="fc" id="L42">                UUID.randomUUID().toString(),</span>
+                passengerName,
+                flightNumber,
+                seatNumber,
+                ReservationStatus.PENDING
+        );
+<span class="fc" id="L48">        reservation.confirm();</span>
+
+<span class="fc" id="L50">        reservations.add(reservation);</span>
+<span class="fc" id="L51">        saveReservations(reservations);</span>
+<span class="fc" id="L52">        return reservation;</span>
+    }
+
+    public Reservation cancelReservation(String reservationId) {
+<span class="fc" id="L56">        List&lt;Reservation&gt; reservations = loadReservations();</span>
+<span class="fc" id="L57">        Reservation reservation = reservations.stream()</span>
+<span class="fc" id="L58">                .filter(r -&gt; r.getId().equals(reservationId))</span>
+<span class="fc" id="L59">                .findFirst()</span>
+<span class="pc" id="L60">                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Reservation not found: &quot; + reservationId));</span>
+
+<span class="fc" id="L62">        reservation.cancel();</span>
+<span class="fc" id="L63">        saveReservations(reservations);</span>
+<span class="fc" id="L64">        return reservation;</span>
+    }
+
+    public List&lt;Reservation&gt; getReservations() {
+<span class="fc" id="L68">        return loadReservations();</span>
+    }
+
+    public Reservation findById(String reservationId) {
+<span class="fc" id="L72">        return loadReservations().stream()</span>
+<span class="fc" id="L73">                .filter(r -&gt; r.getId().equals(reservationId))</span>
+<span class="fc" id="L74">                .findFirst()</span>
+<span class="pc" id="L75">                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Reservation not found: &quot; + reservationId));</span>
+    }
+
+    private List&lt;Reservation&gt; loadReservations() {
+        try {
+<span class="fc" id="L80">            return objectMapper.readValue(dataFile.toFile(), new TypeReference&lt;List&lt;Reservation&gt;&gt;() {</span>
+            });
+<span class="nc" id="L82">        } catch (IOException e) {</span>
+<span class="nc" id="L83">            throw new IllegalStateException(&quot;Could not read reservation file&quot;, e);</span>
+        }
+    }
+
+    private void saveReservations(List&lt;Reservation&gt; reservations) {
+        try {
+<span class="fc" id="L89">            objectMapper.writerWithDefaultPrettyPrinter().writeValue(dataFile.toFile(), reservations);</span>
+<span class="nc" id="L90">        } catch (IOException e) {</span>
+<span class="nc" id="L91">            throw new IllegalStateException(&quot;Could not write reservation file&quot;, e);</span>
+<span class="fc" id="L92">        }</span>
+<span class="fc" id="L93">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

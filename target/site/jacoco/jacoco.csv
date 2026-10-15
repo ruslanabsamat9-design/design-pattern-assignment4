@@ -1,0 +1,19 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+design-pattern-assignment4,com.flightreservation.ticket,TicketService,38,128,1,3,7,33,3,10,2,9
+design-pattern-assignment4,com.flightreservation.ticket,ETicketStatus,0,21,0,0,0,4,0,1,0,1
+design-pattern-assignment4,com.flightreservation.ticket,ETicket,0,82,0,4,0,32,0,16,0,14
+design-pattern-assignment4,com.flightreservation.ticket,TicketService.new TypeReference() {...},0,6,0,0,0,1,0,1,0,1
+design-pattern-assignment4,com.flightreservation.workflow,WorkflowGateway.new TypeReference() {...},0,6,0,0,0,1,0,1,0,1
+design-pattern-assignment4,com.flightreservation.workflow,WorkflowGateway,22,99,2,6,6,21,2,8,0,6
+design-pattern-assignment4,com.flightreservation.workflow,WorkflowProgress,0,56,0,0,0,24,0,12,0,12
+design-pattern-assignment4,com.flightreservation.workflow,WorkflowStatus,0,33,0,0,0,6,0,1,0,1
+design-pattern-assignment4,com.flightreservation.facade,FlightReservationFacade,10,289,7,15,3,70,7,15,0,11
+design-pattern-assignment4,com.flightreservation.facade,ReservationAdminFacade,2,119,7,9,1,28,7,7,0,6
+design-pattern-assignment4,com.flightreservation.reservation,SeatReservationService,34,156,3,7,6,38,5,12,2,10
+design-pattern-assignment4,com.flightreservation.reservation,SeatReservationService.new TypeReference() {...},0,6,0,0,0,1,0,1,0,1
+design-pattern-assignment4,com.flightreservation.reservation,ReservationStatus,0,21,0,0,0,4,0,1,0,1
+design-pattern-assignment4,com.flightreservation.reservation,Reservation,0,82,0,4,0,32,0,16,0,14
+design-pattern-assignment4,com.flightreservation.loyalty,LoyaltyService.new TypeReference() {...},0,6,0,0,0,1,0,1,0,1
+design-pattern-assignment4,com.flightreservation.loyalty,LoyaltyService,32,112,1,3,6,27,3,9,2,8
+design-pattern-assignment4,com.flightreservation.loyalty,LoyaltyProfile,0,68,0,2,0,26,0,12,0,11
+design-pattern-assignment4,com.flightreservation.loyalty,LoyaltyStatus,0,21,0,0,0,4,0,1,0,1

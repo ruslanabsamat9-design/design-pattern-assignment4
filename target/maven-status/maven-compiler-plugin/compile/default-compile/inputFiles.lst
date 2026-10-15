@@ -1,0 +1,15 @@
+C:\Users\Ruslan\Desktop\Disign Patterns\design-pattern-assignment4\src\main\java\com\flightreservation\App.java
+C:\Users\Ruslan\Desktop\Disign Patterns\design-pattern-assignment4\src\main\java\com\flightreservation\facade\FlightReservationFacade.java
+C:\Users\Ruslan\Desktop\Disign Patterns\design-pattern-assignment4\src\main\java\com\flightreservation\facade\ReservationAdminFacade.java
+C:\Users\Ruslan\Desktop\Disign Patterns\design-pattern-assignment4\src\main\java\com\flightreservation\loyalty\LoyaltyProfile.java
+C:\Users\Ruslan\Desktop\Disign Patterns\design-pattern-assignment4\src\main\java\com\flightreservation\loyalty\LoyaltyService.java
+C:\Users\Ruslan\Desktop\Disign Patterns\design-pattern-assignment4\src\main\java\com\flightreservation\loyalty\LoyaltyStatus.java
+C:\Users\Ruslan\Desktop\Disign Patterns\design-pattern-assignment4\src\main\java\com\flightreservation\reservation\Reservation.java
+C:\Users\Ruslan\Desktop\Disign Patterns\design-pattern-assignment4\src\main\java\com\flightreservation\reservation\ReservationStatus.java
+C:\Users\Ruslan\Desktop\Disign Patterns\design-pattern-assignment4\src\main\java\com\flightreservation\reservation\SeatReservationService.java
+C:\Users\Ruslan\Desktop\Disign Patterns\design-pattern-assignment4\src\main\java\com\flightreservation\ticket\ETicket.java
+C:\Users\Ruslan\Desktop\Disign Patterns\design-pattern-assignment4\src\main\java\com\flightreservation\ticket\ETicketStatus.java
+C:\Users\Ruslan\Desktop\Disign Patterns\design-pattern-assignment4\src\main\java\com\flightreservation\ticket\TicketService.java
+C:\Users\Ruslan\Desktop\Disign Patterns\design-pattern-assignment4\src\main\java\com\flightreservation\workflow\WorkflowGateway.java
+C:\Users\Ruslan\Desktop\Disign Patterns\design-pattern-assignment4\src\main\java\com\flightreservation\workflow\WorkflowProgress.java
+C:\Users\Ruslan\Desktop\Disign Patterns\design-pattern-assignment4\src\main\java\com\flightreservation\workflow\WorkflowStatus.java

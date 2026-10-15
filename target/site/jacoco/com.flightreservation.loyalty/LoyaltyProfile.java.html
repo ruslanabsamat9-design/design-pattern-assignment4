@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LoyaltyProfile.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">design-pattern-assignment4</a> &gt; <a href="index.source.html" class="el_package">com.flightreservation.loyalty</a> &gt; <span class="el_source">LoyaltyProfile.java</span></div><h1>LoyaltyProfile.java</h1><pre class="source lang-java linenums">package com.flightreservation.loyalty;
+
+public class LoyaltyProfile {
+    private String passengerName;
+    private String mealPreference;
+    private int points;
+    private LoyaltyStatus status;
+
+<span class="fc" id="L9">    public LoyaltyProfile() {</span>
+<span class="fc" id="L10">    }</span>
+
+<span class="fc" id="L12">    public LoyaltyProfile(String passengerName, String mealPreference, int points, LoyaltyStatus status) {</span>
+<span class="fc" id="L13">        this.passengerName = passengerName;</span>
+<span class="fc" id="L14">        this.mealPreference = mealPreference;</span>
+<span class="fc" id="L15">        this.points = points;</span>
+<span class="fc" id="L16">        this.status = status;</span>
+<span class="fc" id="L17">    }</span>
+
+    public String getPassengerName() {
+<span class="fc" id="L20">        return passengerName;</span>
+    }
+
+    public void setPassengerName(String passengerName) {
+<span class="fc" id="L24">        this.passengerName = passengerName;</span>
+<span class="fc" id="L25">    }</span>
+
+    public String getMealPreference() {
+<span class="fc" id="L28">        return mealPreference;</span>
+    }
+
+    public void setMealPreference(String mealPreference) {
+<span class="fc" id="L32">        this.mealPreference = mealPreference;</span>
+<span class="fc" id="L33">    }</span>
+
+    public int getPoints() {
+<span class="fc" id="L36">        return points;</span>
+    }
+
+    public void setPoints(int points) {
+<span class="fc" id="L40">        this.points = points;</span>
+<span class="fc" id="L41">    }</span>
+
+    public LoyaltyStatus getStatus() {
+<span class="fc" id="L44">        return status;</span>
+    }
+
+    public void setStatus(LoyaltyStatus status) {
+<span class="fc" id="L48">        this.status = status;</span>
+<span class="fc" id="L49">    }</span>
+
+    public void savePreference(String mealPreference) {
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        if (this.status == LoyaltyStatus.COMPENSATED) {</span>
+<span class="fc" id="L53">            throw new IllegalStateException(&quot;Compensated profile cannot be updated&quot;);</span>
+        }
+<span class="fc" id="L55">        this.mealPreference = mealPreference;</span>
+<span class="fc" id="L56">        this.status = LoyaltyStatus.UPDATED;</span>
+<span class="fc" id="L57">        this.points += 10;</span>
+<span class="fc" id="L58">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

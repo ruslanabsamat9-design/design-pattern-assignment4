@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FlightReservationFacade.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">design-pattern-assignment4</a> &gt; <a href="index.source.html" class="el_package">com.flightreservation.facade</a> &gt; <span class="el_source">FlightReservationFacade.java</span></div><h1>FlightReservationFacade.java</h1><pre class="source lang-java linenums">package com.flightreservation.facade;
+
+import com.flightreservation.loyalty.LoyaltyProfile;
+import com.flightreservation.loyalty.LoyaltyService;
+import com.flightreservation.reservation.Reservation;
+import com.flightreservation.reservation.ReservationStatus;
+import com.flightreservation.reservation.SeatReservationService;
+import com.flightreservation.ticket.ETicket;
+import com.flightreservation.ticket.ETicketStatus;
+import com.flightreservation.ticket.TicketService;
+import com.flightreservation.workflow.WorkflowGateway;
+import com.flightreservation.workflow.WorkflowProgress;
+import com.flightreservation.workflow.WorkflowStatus;
+
+import java.nio.file.Path;
+import java.util.List;
+import java.util.UUID;
+
+public class FlightReservationFacade {
+    private final SeatReservationService seatReservationService;
+    private final TicketService ticketService;
+    private final LoyaltyService loyaltyService;
+    private final WorkflowGateway workflowGateway;
+
+<span class="fc" id="L25">    public FlightReservationFacade(Path dataDirectory) {</span>
+<span class="fc" id="L26">        this.seatReservationService = new SeatReservationService(dataDirectory);</span>
+<span class="fc" id="L27">        this.ticketService = new TicketService(dataDirectory);</span>
+<span class="fc" id="L28">        this.loyaltyService = new LoyaltyService(dataDirectory);</span>
+<span class="fc" id="L29">        this.workflowGateway = new WorkflowGateway(dataDirectory);</span>
+<span class="fc" id="L30">    }</span>
+
+    public Reservation book(String passengerName, String flightNumber, String seatNumber, double baggageKg, String mealPreference) {
+<span class="fc" id="L33">        Reservation reservation = seatReservationService.reserveSeat(passengerName, flightNumber, seatNumber);</span>
+<span class="fc" id="L34">        WorkflowProgress progress = new WorkflowProgress(</span>
+<span class="fc" id="L35">                UUID.randomUUID().toString(),</span>
+                passengerName,
+<span class="fc" id="L37">                reservation.getId(),</span>
+                null,
+                WorkflowStatus.PENDING_B
+        );
+<span class="fc" id="L41">        workflowGateway.save(progress);</span>
+
+<span class="fc" id="L43">        ETicket ticket = ticketService.issueTicket(reservation.getId(), passengerName, baggageKg);</span>
+<span class="fc" id="L44">        progress.setTicketId(ticket.getId());</span>
+<span class="fc" id="L45">        progress.setStatus(WorkflowStatus.PENDING_C);</span>
+<span class="fc" id="L46">        workflowGateway.save(progress);</span>
+
+<span class="fc" id="L48">        loyaltyService.savePreference(passengerName, mealPreference);</span>
+<span class="fc" id="L49">        progress.setStatus(WorkflowStatus.COMPLETED);</span>
+<span class="fc" id="L50">        workflowGateway.save(progress);</span>
+
+<span class="fc" id="L52">        return reservation;</span>
+    }
+
+    public Reservation bookWithFailure(String passengerName, String flightNumber, String seatNumber, double baggageKg,
+                                      String mealPreference, String failureStage) {
+<span class="fc bfc" id="L57" title="All 2 branches covered.">        if (&quot;B&quot;.equalsIgnoreCase(failureStage)) {</span>
+<span class="fc" id="L58">            Reservation reservation = seatReservationService.reserveSeat(passengerName, flightNumber, seatNumber);</span>
+<span class="fc" id="L59">            WorkflowProgress progress = new WorkflowProgress(</span>
+<span class="fc" id="L60">                    UUID.randomUUID().toString(),</span>
+                    passengerName,
+<span class="fc" id="L62">                    reservation.getId(),</span>
+                    null,
+                    WorkflowStatus.PENDING_B
+            );
+<span class="fc" id="L66">            workflowGateway.save(progress);</span>
+<span class="fc" id="L67">            recoverWorkflowProgress();</span>
+<span class="fc" id="L68">            return seatReservationService.findById(reservation.getId());</span>
+        }
+
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">        if (&quot;C&quot;.equalsIgnoreCase(failureStage)) {</span>
+<span class="fc" id="L72">            Reservation reservation = seatReservationService.reserveSeat(passengerName, flightNumber, seatNumber);</span>
+<span class="fc" id="L73">            WorkflowProgress progress = new WorkflowProgress(</span>
+<span class="fc" id="L74">                    UUID.randomUUID().toString(),</span>
+                    passengerName,
+<span class="fc" id="L76">                    reservation.getId(),</span>
+                    null,
+                    WorkflowStatus.PENDING_B
+            );
+<span class="fc" id="L80">            workflowGateway.save(progress);</span>
+
+<span class="fc" id="L82">            ETicket ticket = ticketService.issueTicket(reservation.getId(), passengerName, baggageKg);</span>
+<span class="fc" id="L83">            progress.setTicketId(ticket.getId());</span>
+<span class="fc" id="L84">            progress.setStatus(WorkflowStatus.PENDING_C);</span>
+<span class="fc" id="L85">            workflowGateway.save(progress);</span>
+
+<span class="fc" id="L87">            recoverWorkflowProgress();</span>
+<span class="fc" id="L88">            return seatReservationService.findById(reservation.getId());</span>
+        }
+
+<span class="nc" id="L91">        return book(passengerName, flightNumber, seatNumber, baggageKg, mealPreference);</span>
+    }
+
+    public WorkflowProgress recoverWorkflowProgress() {
+<span class="fc" id="L95">        WorkflowProgress progress = workflowGateway.loadLatest();</span>
+<span class="fc bfc" id="L96" title="All 2 branches covered.">        if (progress == null) {</span>
+<span class="fc" id="L97">            return null;</span>
+        }
+
+<span class="fc" id="L100">        WorkflowStatus status = progress.getStatus();</span>
+<span class="pc bpc" id="L101" title="1 of 4 branches missed.">        if (status == WorkflowStatus.COMPLETED || status == WorkflowStatus.COMPENSATED) {</span>
+<span class="fc" id="L102">            return progress;</span>
+        }
+
+<span class="fc" id="L105">        progress.setStatus(WorkflowStatus.COMPENSATING);</span>
+<span class="fc" id="L106">        workflowGateway.save(progress);</span>
+
+<span class="fc bfc" id="L108" title="All 2 branches covered.">        if (status == WorkflowStatus.PENDING_B) {</span>
+<span class="fc" id="L109">            compensateReservation(progress.getReservationId());</span>
+<span class="pc bpc" id="L110" title="1 of 2 branches missed.">        } else if (status == WorkflowStatus.PENDING_C) {</span>
+<span class="fc" id="L111">            compensateTicket(progress.getTicketId());</span>
+<span class="fc" id="L112">            compensateReservation(progress.getReservationId());</span>
+        }
+
+<span class="fc" id="L115">        progress.setStatus(WorkflowStatus.COMPENSATED);</span>
+<span class="fc" id="L116">        workflowGateway.save(progress);</span>
+<span class="fc" id="L117">        return progress;</span>
+    }
+
+    private void compensateTicket(String ticketId) {
+<span class="pc bpc" id="L121" title="1 of 2 branches missed.">        if (ticketId == null) {</span>
+<span class="nc" id="L122">            return;</span>
+        }
+
+<span class="fc" id="L125">        ETicket ticket = ticketService.findById(ticketId);</span>
+<span class="pc bpc" id="L126" title="1 of 2 branches missed.">        if (ticket.getStatus() != ETicketStatus.CANCELLED) {</span>
+<span class="fc" id="L127">            ticketService.cancelTicket(ticketId);</span>
+        }
+<span class="fc" id="L129">    }</span>
+
+    private void compensateReservation(String reservationId) {
+<span class="pc bpc" id="L132" title="1 of 2 branches missed.">        if (reservationId == null) {</span>
+<span class="nc" id="L133">            return;</span>
+        }
+
+<span class="fc" id="L136">        Reservation reservation = seatReservationService.findById(reservationId);</span>
+<span class="pc bpc" id="L137" title="1 of 2 branches missed.">        if (reservation.getStatus() != ReservationStatus.CANCELLED) {</span>
+<span class="fc" id="L138">            seatReservationService.cancelReservation(reservationId);</span>
+        }
+<span class="fc" id="L140">    }</span>
+
+    public WorkflowProgress getWorkflowProgress() {
+<span class="fc" id="L143">        return workflowGateway.loadLatest();</span>
+    }
+
+    public List&lt;Reservation&gt; getReservations() {
+<span class="fc" id="L147">        return seatReservationService.getReservations();</span>
+    }
+
+    public List&lt;ETicket&gt; getTickets() {
+<span class="fc" id="L151">        return ticketService.getTickets();</span>
+    }
+
+    public List&lt;LoyaltyProfile&gt; getProfiles() {
+<span class="fc" id="L155">        return loyaltyService.getProfiles();</span>
+    }
+
+    public LoyaltyProfile getProfile(String passengerName) {
+<span class="fc" id="L159">        return loyaltyService.findByPassengerName(passengerName);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
