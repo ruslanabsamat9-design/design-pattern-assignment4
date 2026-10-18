@@ -3,159 +3,72 @@ package com.flightreservation.facade;
 import com.flightreservation.loyalty.LoyaltyProfile;
 import com.flightreservation.loyalty.LoyaltyService;
 import com.flightreservation.reservation.Reservation;
-import com.flightreservation.reservation.ReservationStatus;
 import com.flightreservation.reservation.SeatReservationService;
+import com.flightreservation.storage.JsonStore;
 import com.flightreservation.ticket.ETicket;
-import com.flightreservation.ticket.ETicketStatus;
 import com.flightreservation.ticket.TicketService;
-import com.flightreservation.workflow.WorkflowGateway;
-import com.flightreservation.workflow.WorkflowProgress;
-import com.flightreservation.workflow.WorkflowStatus;
-
+import com.flightreservation.workflow.*;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 
 public class FlightReservationFacade {
-    private final SeatReservationService seatReservationService;
-    private final TicketService ticketService;
-    private final LoyaltyService loyaltyService;
-    private final WorkflowGateway workflowGateway;
+    private final Path directory;
+    private final SeatReservationService seats;
+    private final TicketService tickets;
+    private final LoyaltyService loyalty;
+    private final WorkflowGateway workflows;
 
-    public FlightReservationFacade(Path dataDirectory) {
-        this.seatReservationService = new SeatReservationService(dataDirectory);
-        this.ticketService = new TicketService(dataDirectory);
-        this.loyaltyService = new LoyaltyService(dataDirectory);
-        this.workflowGateway = new WorkflowGateway(dataDirectory);
+    public FlightReservationFacade(Path directory) {
+        this.directory=directory;
+        JsonStore store=new JsonStore(directory);
+        seats=new SeatReservationService(store); tickets=new TicketService(store);
+        loyalty=new LoyaltyService(store); workflows=new WorkflowGateway(store);
     }
 
-    public Reservation book(String passengerName, String flightNumber, String seatNumber, double baggageKg, String mealPreference) {
-        Reservation reservation = seatReservationService.reserveSeat(passengerName, flightNumber, seatNumber);
-        WorkflowProgress progress = new WorkflowProgress(
-                UUID.randomUUID().toString(),
-                passengerName,
-                reservation.getId(),
-                null,
-                WorkflowStatus.PENDING_B
-        );
-        workflowGateway.save(progress);
-
-        ETicket ticket = ticketService.issueTicket(reservation.getId(), passengerName, baggageKg);
-        progress.setTicketId(ticket.getId());
-        progress.setStatus(WorkflowStatus.PENDING_C);
-        workflowGateway.save(progress);
-
-        loyaltyService.savePreference(passengerName, mealPreference);
-        progress.setStatus(WorkflowStatus.COMPLETED);
-        workflowGateway.save(progress);
-
-        return reservation;
-    }
-
-    public Reservation bookWithFailure(String passengerName, String flightNumber, String seatNumber, double baggageKg,
-                                      String mealPreference, String failureStage) {
-        if ("B".equalsIgnoreCase(failureStage)) {
-            Reservation reservation = seatReservationService.reserveSeat(passengerName, flightNumber, seatNumber);
-            WorkflowProgress progress = new WorkflowProgress(
-                    UUID.randomUUID().toString(),
-                    passengerName,
-                    reservation.getId(),
-                    null,
-                    WorkflowStatus.PENDING_B
-            );
-            workflowGateway.save(progress);
-            recoverWorkflowProgress();
-            return seatReservationService.findById(reservation.getId());
-        }
-
-        if ("C".equalsIgnoreCase(failureStage)) {
-            Reservation reservation = seatReservationService.reserveSeat(passengerName, flightNumber, seatNumber);
-            WorkflowProgress progress = new WorkflowProgress(
-                    UUID.randomUUID().toString(),
-                    passengerName,
-                    reservation.getId(),
-                    null,
-                    WorkflowStatus.PENDING_B
-            );
-            workflowGateway.save(progress);
-
-            ETicket ticket = ticketService.issueTicket(reservation.getId(), passengerName, baggageKg);
-            progress.setTicketId(ticket.getId());
-            progress.setStatus(WorkflowStatus.PENDING_C);
-            workflowGateway.save(progress);
-
-            recoverWorkflowProgress();
-            return seatReservationService.findById(reservation.getId());
-        }
-
-        return book(passengerName, flightNumber, seatNumber, baggageKg, mealPreference);
-    }
-
-    public WorkflowProgress recoverWorkflowProgress() {
-        WorkflowProgress progress = workflowGateway.loadLatest();
-        if (progress == null) {
-            return null;
-        }
-
-        WorkflowStatus status = progress.getStatus();
-        if (status == WorkflowStatus.COMPLETED || status == WorkflowStatus.COMPENSATED) {
-            return progress;
-        }
-
-        progress.setStatus(WorkflowStatus.COMPENSATING);
-        workflowGateway.save(progress);
-
-        if (status == WorkflowStatus.PENDING_B) {
-            compensateReservation(progress.getReservationId());
-        } else if (status == WorkflowStatus.PENDING_C) {
-            compensateTicket(progress.getTicketId());
-            compensateReservation(progress.getReservationId());
-        }
-
-        progress.setStatus(WorkflowStatus.COMPENSATED);
-        workflowGateway.save(progress);
-        return progress;
-    }
-
-    private void compensateTicket(String ticketId) {
-        if (ticketId == null) {
-            return;
-        }
-
-        ETicket ticket = ticketService.findById(ticketId);
-        if (ticket.getStatus() != ETicketStatus.CANCELLED) {
-            ticketService.cancelTicket(ticketId);
+    public BookingReceipt book(BookingRequest request) {
+        request.validate();
+        Reservation reservation=seats.reserve(request.passenger(),request.flight(),request.seat());
+        WorkflowProgress w=new WorkflowProgress(UUID.randomUUID().toString(),request.passenger(),
+                reservation.getId(),WorkflowStatus.PENDING_B);
+        workflows.save(w);
+        try {
+            ETicket ticket=tickets.issue(reservation.getId(),request.passenger(),request.baggageKg());
+            w.setTicketId(ticket.getId()); w.setStatus(WorkflowStatus.PENDING_C); workflows.save(w);
+            try {
+                loyalty.savePreference(request.passenger(),request.meal());
+            } catch (RuntimeException cFailure) {
+                w.setFailure(cFailure.getMessage()); compensate(w); throw new IllegalStateException("Step C failed: "+cFailure.getMessage(),cFailure);
+            }
+            w.setStatus(WorkflowStatus.COMPLETED); workflows.save(w);
+            return new BookingReceipt(w.getId(),reservation.getId(),ticket.getId());
+        } catch (RuntimeException failure) {
+            if(w.getStatus()==WorkflowStatus.PENDING_B) {
+                w.setFailure(failure.getMessage()); compensate(w);
+                throw new IllegalStateException("Step B failed; reservation cancelled: "+failure.getMessage(),failure);
+            }
+            throw failure;
         }
     }
 
-    private void compensateReservation(String reservationId) {
-        if (reservationId == null) {
-            return;
-        }
-
-        Reservation reservation = seatReservationService.findById(reservationId);
-        if (reservation.getStatus() != ReservationStatus.CANCELLED) {
-            seatReservationService.cancelReservation(reservationId);
-        }
+    private void compensate(WorkflowProgress w) {
+        w.setStatus(WorkflowStatus.COMPENSATING); workflows.save(w);
+        if(w.getTicketId()!=null) tickets.voidTicket(w.getTicketId());
+        seats.cancel(w.getReservationId());
+        w.setStatus(WorkflowStatus.COMPENSATED); workflows.save(w);
     }
 
-    public WorkflowProgress getWorkflowProgress() {
-        return workflowGateway.loadLatest();
+    public List<WorkflowProgress> recover() {
+        List<WorkflowProgress> done=new java.util.ArrayList<>();
+        for(WorkflowProgress w:workflows.unfinished()){compensate(w);done.add(w);}
+        return done;
     }
-
-    public List<Reservation> getReservations() {
-        return seatReservationService.getReservations();
-    }
-
-    public List<ETicket> getTickets() {
-        return ticketService.getTickets();
-    }
-
-    public List<LoyaltyProfile> getProfiles() {
-        return loyaltyService.getProfiles();
-    }
-
-    public LoyaltyProfile getProfile(String passengerName) {
-        return loyaltyService.findByPassengerName(passengerName);
-    }
+    public List<WorkflowProgress> workflows(){return workflows.all();}
+    public List<Reservation> reservations(){return seats.all();}
+    public List<ETicket> tickets(){return tickets.all();}
+    public List<LoyaltyProfile> profiles(){return loyalty.all();}
+    public void reset(){for(String f:List.of("reservations.json","tickets.json","loyalty.json","workflows.json")){
+        try { java.nio.file.Files.deleteIfExists(directory.resolve(f)); }
+        catch(java.io.IOException e){throw new IllegalStateException(e);}
+    }}
 }

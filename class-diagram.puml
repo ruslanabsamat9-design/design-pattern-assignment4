@@ -1,0 +1,47 @@
+@startuml
+class App
+class FlightReservationFacade
+class ReservationAdminFacade
+package "Subsystem A: reservation" {
+ class Reservation
+ enum ReservationStatus
+ class SeatMap
+ class SeatReservationService
+ class ReservationRepository
+}
+package "Subsystem B: ticket" {
+ class ETicket
+ enum TicketStatus
+ class BaggageRules
+ class TicketService
+ class TicketRepository
+}
+package "Subsystem C: loyalty" {
+ class LoyaltyProfile
+ enum LoyaltyStatus
+ class MealCatalog
+ class LoyaltyService
+ class LoyaltyRepository
+}
+package workflow {
+ class WorkflowProgress
+ enum WorkflowStatus
+ class WorkflowGateway
+ class WorkflowRepository
+}
+class JsonStore
+App --> FlightReservationFacade
+App --> ReservationAdminFacade
+FlightReservationFacade --> SeatReservationService
+FlightReservationFacade --> TicketService
+FlightReservationFacade --> LoyaltyService
+FlightReservationFacade --> WorkflowGateway
+SeatReservationService --> ReservationRepository
+TicketService --> TicketRepository
+LoyaltyService --> LoyaltyRepository
+ReservationRepository --> JsonStore
+TicketRepository --> JsonStore
+LoyaltyRepository --> JsonStore
+WorkflowGateway --> WorkflowRepository
+WorkflowRepository --> JsonStore
+@enduml

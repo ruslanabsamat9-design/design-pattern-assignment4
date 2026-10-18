@@ -1,18 +1,31 @@
-## Getting Started
+# Simple Flight Reservation (Facade Pattern)
 
-Welcome to the VS Code Java world. Here is a guideline to help you get started to write Java code in Visual Studio Code.
+Small Java 17 + Maven example for Design Patterns Assignment 4.
 
-## Folder Structure
+## Workflow
+- A: reserve a seat.
+- B: issue an e-ticket and validate baggage (maximum 23 kg).
+- C: save meal preference and loyalty points.
+- `FlightReservationFacade` coordinates A → B → C.
+- If B fails, A is cancelled. If C fails, B is cancelled first and then A.
+- JSON files are saved in `demo-data/`; state remains after restarting.
 
-The workspace contains two folders by default, where:
+## Run
+Install JDK 17 and Maven, then from this folder:
 
-- `src`: the folder to maintain sources
-- `lib`: the folder to maintain dependencies
+```powershell
+mvn test
+mvn compile exec:java
+```
 
-Meanwhile, the compiled output files will be generated in the `bin` folder by default.
+Choose menu option 2 to demonstrate B failure, option 3 to demonstrate C failure, option 6 to inspect data, and option 8 to clear the data folder.
 
-> If you want to customize the folder structure, open `.vscode/settings.json` and update the related settings there.
+## Least Knowledge
+Before: a client would need to call the seat service, ticket service, and loyalty service in the right order and perform compensation itself.
+After: the client calls only `FlightReservationFacade.book(request)`. The facade hides the subsystem sequence.
 
-## Dependency Management
+## Facade vs Adapter
+Facade provides one simple entry point to several subsystems. Adapter changes one interface into another compatible interface. This project uses Facade because it coordinates multiple reservation steps rather than adapting an incompatible API.
 
-The `JAVA PROJECTS` view allows you to manage your dependencies. More details can be found [here](https://github.com/microsoft/vscode-java-dependency#manage-dependencies).
+## Design note
+The three subsystems have separate entities, status enums, services, and JSON repositories. Workflow progress is also stored, so unfinished workflows can be compensated on startup.

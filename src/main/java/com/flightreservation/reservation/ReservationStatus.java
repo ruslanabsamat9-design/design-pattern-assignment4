@@ -1,7 +1,2 @@
 package com.flightreservation.reservation;
-
-public enum ReservationStatus {
-    PENDING,
-    CONFIRMED,
-    CANCELLED
-}
+public enum ReservationStatus { CONFIRMED, CANCELLED, COMPLETED }

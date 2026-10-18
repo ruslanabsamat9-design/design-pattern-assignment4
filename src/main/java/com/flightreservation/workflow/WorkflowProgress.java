@@ -1,60 +1,15 @@
 package com.flightreservation.workflow;
 
 public class WorkflowProgress {
-    private String workflowId;
-    private String passengerName;
-    private String reservationId;
-    private String ticketId;
+    private String id, passenger, reservationId, ticketId, failure;
     private WorkflowStatus status;
-
-    public WorkflowProgress() {
+    public WorkflowProgress(){}
+    public WorkflowProgress(String id,String passenger,String reservationId,WorkflowStatus status){
+        this.id=id;this.passenger=passenger;this.reservationId=reservationId;this.status=status;
     }
-
-    public WorkflowProgress(String workflowId, String passengerName, String reservationId, String ticketId, WorkflowStatus status) {
-        this.workflowId = workflowId;
-        this.passengerName = passengerName;
-        this.reservationId = reservationId;
-        this.ticketId = ticketId;
-        this.status = status;
-    }
-
-    public String getWorkflowId() {
-        return workflowId;
-    }
-
-    public void setWorkflowId(String workflowId) {
-        this.workflowId = workflowId;
-    }
-
-    public String getPassengerName() {
-        return passengerName;
-    }
-
-    public String getReservationId() {
-        return reservationId;
-    }
-
-    public void setReservationId(String reservationId) {
-        this.reservationId = reservationId;
-    }
-
-    public String getTicketId() {
-        return ticketId;
-    }
-
-    public void setTicketId(String ticketId) {
-        this.ticketId = ticketId;
-    }
-
-    public WorkflowStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(WorkflowStatus status) {
-        this.status = status;
-    }
-
-    public void setPassengerName(String passengerName) {
-        this.passengerName = passengerName;
-    }
+    public String getId(){return id;} public String getPassenger(){return passenger;}
+    public String getReservationId(){return reservationId;} public String getTicketId(){return ticketId;}
+    public String getFailure(){return failure;} public WorkflowStatus getStatus(){return status;}
+    public void setTicketId(String value){ticketId=value;} public void setStatus(WorkflowStatus value){status=value;}
+    public void setFailure(String value){failure=value;}
 }
